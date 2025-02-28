@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ocsf-json-schema"
+version = "0.1.0"
+description = "A Python library for generating OCSF JSON schemas."
+authors = [{ name = "Neil Smith", email = "neil@nsmith.net" }]
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []  # No dependencies for normal use
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "jsonschema",
+]
+
+[tool.setuptools]
+packages = ["ocsf_json_schema"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
