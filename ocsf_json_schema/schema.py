@@ -32,6 +32,17 @@ class OcsfJsonSchema:
         """Initialize with a JSON schema dictionary."""
         self.schema = json_schema
         self.version = json_schema.get("version")
+        self.class_name_uid_map: dict[int, str] = {}
+
+    def lookup_class_name_from_uid(self, class_uid: int) -> str:
+        if len(self.class_name_uid_map) == 0:
+            for cls in self.schema['classes'].values():
+                self.class_name_uid_map[cls['uid']] = cls['name']
+
+        if class_uid in self.class_name_uid_map:
+            return self.class_name_uid_map[class_uid]
+
+        raise ValueError(f"No class found for uid {class_uid}")
 
     def get_schema_from_uri(self, uri: str) -> dict:
         """Retrieve a schema from a URI."""

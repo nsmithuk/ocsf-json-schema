@@ -3,7 +3,7 @@ import json
 import uuid
 from ocsf_json_schema import OcsfJsonSchema, get_ocsf_schema
 from ocsf_json_schema.embedded import OcsfJsonSchemaEmbedded
-from jsonschema import validate, Draft202012Validator, validators, exceptions
+from jsonschema import Draft202012Validator, exceptions
 
 
 @pytest.mark.parametrize("version", [

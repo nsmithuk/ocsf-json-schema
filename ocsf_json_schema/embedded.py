@@ -16,6 +16,9 @@ class OcsfJsonSchemaEmbedded:
         else:
             self.schema = OcsfJsonSchema(schema)  # Convert dict to OcsfJsonSchema instance
 
+    def lookup_class_name_from_uid(self, class_uid: int) -> str:
+        return self.schema.lookup_class_name_from_uid(class_uid)
+
     def get_schema_from_uri(self, uri: str) -> dict:
         """Retrieve and embed schema from a given URI."""
         return self._embed_objects(self.schema.get_schema_from_uri(uri))
