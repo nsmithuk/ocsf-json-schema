@@ -1,5 +1,8 @@
 # OCSF JSON Schema
 
+> [!CAUTION]
+> This is a work in progress—primarily for my own learning about OCSF. Please treat this as beta-grade code.
+
 ## Overview
 
 This project provides a tool for generating [JSON Schema](https://json-schema.org/draft/2020-12) files that can
