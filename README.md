@@ -204,5 +204,19 @@ except exceptions.SchemaError as e:
     print(f"Log's schema is invalid: {e}")
 ```
 
+### Notes on validation
+
+- `null` values are not supported and, if present, will likely result in the validation failing. If a value is `null`, the key/value pair should be removed before validation. This aligns with the JSON Schema files from [schema.ocsf.io](https://schema.ocsf.io).
+- If you are validating a file that was previously parquet, be careful of fields that should be a dictionary, but may have been converted to a list of tuples. The validator will expect these fields to be a dictionary. This will most likely occur for fields of type `object`. For example, `unmapped`.
+
+## Build
+
+This repo can be built as a package with the following.
+```shell
+rm ocsf_json_schema/ocsf/*.pkl
+pip install build
+python -m build
+```
+
 # Licence
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

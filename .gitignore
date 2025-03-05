@@ -1,7 +1,8 @@
 /.idea
-/ocsf_schema/*.pkl
+*.pkl
 /local_test
 __pycache__
 .DS_Store
 /ocsf_json_schema.egg-info
 /error-*
+/dist

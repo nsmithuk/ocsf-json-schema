@@ -13,5 +13,13 @@ Exports:
 from .schema import OcsfJsonSchema
 from .embedded import OcsfJsonSchemaEmbedded
 from .loader import load_ocsf_schema_json, load_ocsf_schema_pickle, get_ocsf_schema
+from .pickle_it import pickle_it
 
-__all__ = ["OcsfJsonSchema", "OcsfJsonSchemaEmbedded", "load_ocsf_schema_json", "load_ocsf_schema_pickle", "get_ocsf_schema"]
+__all__ = [
+    "OcsfJsonSchema",
+    "OcsfJsonSchemaEmbedded",
+    "load_ocsf_schema_json",
+    "load_ocsf_schema_pickle",
+    "get_ocsf_schema",
+    "pickle_it"
+]

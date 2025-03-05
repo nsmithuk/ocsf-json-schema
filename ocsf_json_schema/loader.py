@@ -18,7 +18,7 @@ def load_ocsf_schema_pickle(path: str) -> dict:
 def get_ocsf_schema(version: str) -> dict:
     """Get OCSF schema for a version, preferring Pickle if available, else JSON."""
     script_dir = Path(__file__).parent  # Get directory of this script
-    path_prefix = f"{script_dir}/../ocsf_schema/{version}"  # Build path to schema files
+    path_prefix = f"{script_dir}/ocsf/{version}"  # Build path to schema files
 
     if Path(f"{path_prefix}.pkl").exists():  # Check if Pickle file exists
         return load_ocsf_schema_pickle(f"{path_prefix}.pkl")
