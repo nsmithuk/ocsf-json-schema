@@ -46,10 +46,17 @@ class OcsfJsonSchemaEmbedded:
         profiles = self._profiles_from_uri(data['$id'])
         data['$defs'] = {}  # Initialize definitions section
         objects_added = set()
+        loop_count = 0
+
+        objects_to_add = objects_seen.difference(objects_added)
 
         # Process all referenced objects, including nested ones
-        while len(objects_seen.difference(objects_added)) > 0:
-            objects_to_add = objects_seen.difference(objects_added)
+        while len(objects_to_add) > 0:
+
+            if loop_count > 100:
+                # infinite loop catch. Realistically count will be a single digit.
+                raise RuntimeError("suspicious number of objects being added")
+
             for obj_name in objects_to_add:
                 obj = self.schema.get_object_schema(obj_name, profiles)
 
@@ -64,6 +71,9 @@ class OcsfJsonSchemaEmbedded:
 
                 objects_seen.update(new_objects)
                 objects_added.add(obj_name)
+
+            objects_to_add = objects_seen.difference(objects_added)
+            loop_count = loop_count + 1
 
         return data
 

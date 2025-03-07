@@ -216,8 +216,8 @@ except exceptions.SchemaError as e:
 
 This repo can be built as a package with the following.
 ```shell
-rm ocsf_json_schema/ocsf/*.pkl
 pip install build
+rm ocsf_json_schema/ocsf/*.pkl
 python -m build
 ```
 

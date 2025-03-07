@@ -6,3 +6,4 @@ __pycache__
 /ocsf_json_schema.egg-info
 /error-*
 /dist
+/.coverage

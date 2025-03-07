@@ -33,3 +33,8 @@ You can generate Pickle files from the JSON schemas using the following command:
 ```bash
 python pickle_it.py
 ```
+
+# Open Cybersecurity Schema Framework Licence
+OCSF is licensed under the Apache License, version 2 ("ALv2"). - see the [LICENSE](LICENSE) file for details.
+
+The official OCSF schema repository can be found here: https://github.com/ocsf/ocsf-schema

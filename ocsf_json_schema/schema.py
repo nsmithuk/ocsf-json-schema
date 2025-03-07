@@ -7,24 +7,6 @@ class OcsfJsonSchema:
     OCSF_SCHEMA_PREFIX = "https://schema.ocsf.io"  # Base URI for OCSF schemas
     JSON_SCHEMA_VERSION = "https://json-schema.org/draft/2020-12/schema"  # JSON Schema version
 
-    OCSF_SCHEMA_TYPE_MAPPING = {  # Maps OCSF types to JSON Schema types
-        "boolean_t": "boolean",
-        "float_t": "number",
-        "integer_t": "integer",
-        "long_t": "integer",
-        "string_t": "string",
-        "json_t": None,
-        "object_t": None,
-        "datetime_t": "string",
-        "ip_t": "string",
-        "mac_t": "string",
-        "port_t": "integer",
-        "timestamp_t": "integer",
-        "url_t": "string",
-        "email_t": "string",
-        "fqdn_t": "string"
-    }
-
     # --------------------------------------------------------------
     # Public
 
@@ -176,59 +158,146 @@ class OcsfJsonSchema:
     def _generate_attribute(self, attribute: dict, ref_format: str) -> dict:
         """Generate JSON schema for an attribute."""
         json_schema = {"title": attribute.get('caption')}
-        attr_type = attribute.get("type")
-        json_type = self.OCSF_SCHEMA_TYPE_MAPPING.get(attr_type)
 
-        if json_type:
-            json_schema["type"] = json_type
-
-        # Add type-specific formats or constraints
-        match attr_type:
-            case "datetime_t":
-                json_schema["format"] = "date-time"
-            case "ip_t":
-                json_schema["format"] = "ipv4"
-            case "mac_t":
-                json_schema["pattern"] = "^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"
-            case "port_t":
-                json_schema["minimum"] = 0
-                json_schema["maximum"] = 65535
-            case "timestamp_t":
-                json_schema["minimum"] = 0
-            case "url_t":
-                json_schema["format"] = "uri"
-            case "email_t":
-                json_schema["format"] = "email"
-            case "fqdn_t":
-                json_schema["format"] = "hostname"
-
-        # Handle enums
-        if "enum" in attribute:
-            enum_values = [int(k) if attr_type in ["integer_t", "long_t", "port_t", "timestamp_t"] else k
-                           for k in attribute["enum"].keys()]
-            if len(enum_values) == 1:
-                json_schema["const"] = enum_values[0]
-            else:
-                json_schema["enum"] = enum_values
-
-        # Reference objects
-        if attr_type == "object_t":
-            obj_type = attribute.get("object_type", None)
-            if obj_type is None:
-                raise ValueError("Object type is not defined")
-            json_schema["$ref"] = ref_format % obj_type
-
-        # Handle arrays
-        if attribute.get("is_array", False):
-            item_schema = {k: v for k, v in json_schema.items() if k not in ["title", "type"]}
-            json_schema = {
-                "title": attribute.get('caption'),
-                "type": "array",
-                "items": item_schema or {"type": json_type} if json_type else {}
-            }
+        # ---
 
         # Mark deprecated
         if '@deprecated' in attribute:
             json_schema["deprecated"] = True
 
+        # ---
+
+        attr_type = attribute.get("type")
+
+        base_types = {
+            'boolean_t': 'boolean',
+            'integer_t': 'integer',
+            'float_t': 'number',
+            'long_t': 'integer',
+            'string_t': 'string',
+            'json_t': ['object', 'string', 'integer', 'number', 'boolean', 'array', 'null']
+        }
+
+        if self.version == '1.0.0-rc.2':
+            # These two scalars are incorrectly defined in 'types' for this version, so we'll override them here.
+            base_types.update({
+                'subnet_t': 'string',
+                'file_hash_t': 'string',
+            })
+
+        item = {}
+
+        if attr_type == 'object_t':
+            obj_type = attribute.get("object_type")
+            if obj_type is None:
+                raise ValueError("Object type is not defined")
+
+            item["$ref"] = ref_format % obj_type
+
+        else:
+            if attr_type not in self.schema['types']:
+                raise ValueError(f"unknown type found: {attr_type}")
+
+            type_definition = self.schema['types'][attr_type]
+
+            # If it's a base type
+            if attr_type in base_types:
+                item['type'] = base_types[attr_type]
+
+            else:
+                # Else it's a scalar type
+
+                # We get the primitive out of the 'types' dictionary.
+                primitive = type_definition.get('type')
+
+                if primitive is None or primitive not in base_types:
+                    raise ValueError(f" unknown scalar type: {attr_type}")
+
+                item['type'] = base_types[primitive]
+
+            type_constraints = self._generate_type_constraints(
+                attr_type,
+                item['type'],
+                type_definition,
+                attribute.get('enum')
+            )
+
+            if type_constraints:
+                item.update(type_constraints)
+
+        # ---
+
+        if attribute.get('is_array', False):
+            json_schema["type"] = 'array'
+            json_schema['items'] = item
+        else:
+            json_schema.update(item)
+
         return json_schema
+
+    def _generate_type_constraints(self, type_name:str, json_type: str, type_definition: dict, enum: dict | None) -> dict:
+        """
+        Applies from type constraints.
+
+        We'll stick to using the regex's defined in the OCSF schema, rather than using the built-in
+        JSON Schema types, as the two _might_ not align.
+        """
+
+        type_format = {}
+
+        if enum:
+            values = list(enum.keys())
+            match json_type:
+                case 'boolean':
+                    # There are no examples of this currently, and saves having to deal with Python's crazy
+                    # views on what a 'true' string is.
+                    raise NotImplementedError("enum support on a boolean type is not currently supported")
+                case 'integer':
+                    values = list(map(int, values))
+                case 'number':
+                    values = list(map(float, values))
+
+            if len(values) == 1:
+                type_format["const"] = values[0]
+            else:
+                type_format["enum"] = values
+
+
+        # ---
+
+        if 'max_len' in type_definition:
+            type_format["maximum"] = type_definition['max_len']
+            if 'range' in type_definition:
+                raise RuntimeError("max_len or range should be set, not both")
+
+        if 'range' in type_definition:
+            type_format["minimum"] = type_definition['range'][0]
+            type_format["maximum"] = type_definition['range'][1]
+
+        if 'regex' in type_definition:
+            type_format['pattern'] = type_definition['regex']
+
+            """
+            Some older of OCSF versions include regular expressions that are invalid in JSON Schema.
+            We'll deal with the as best as we can.
+            """
+            if self.version == '1.0.0-rc.2' and type_name == 'path_t':
+                '''
+                Not a valid JSON Schema regex. See:
+                https://schema.ocsf.io/1.0.0-rc.2/data_types
+                
+                path_t is dropped in later versions. We'll just ship this one. 
+                '''
+                del type_format['pattern']
+
+            elif type_name == 'ip_t' and self.version in {'1.0.0-rc.2', '1.0.0-rc.3', '1.0.0'}:
+                '''
+                Not a valid JSON Schema regex. See:
+                https://schema.ocsf.io/1.0.0-rc.2/data_types
+                
+                We'll use the regex form 1.4.0 from:
+                https://schema.ocsf.io/1.4.0/data_types
+                '''
+                type_format['pattern'] = r"((^\s*((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]).){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))\s*$)|(^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$))"
+
+        return type_format
