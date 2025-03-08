@@ -24,3 +24,13 @@ def get_ocsf_schema(version: str) -> dict:
         return load_ocsf_schema_pickle(f"{path_prefix}.pkl")
 
     return load_ocsf_schema_json(f"{path_prefix}.json")  # Fallback to JSON
+
+
+def get_packaged_versions() -> set:
+    """Get a set of the packaged versions of OCSF."""
+    script_dir = Path(__file__).parent
+    path_prefix = f"{script_dir}/ocsf/"
+    return set(
+        [file.stem for file in Path(path_prefix).glob("*.json")] +
+        [file.stem for file in Path(path_prefix).glob("*.pkl")]
+    )
