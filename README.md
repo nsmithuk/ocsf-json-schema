@@ -1,16 +1,16 @@
 # OCSF JSON Schema
 
-> [!CAUTION]
+> [!NOTE]
 > This is a work in progress—primarily for my own learning about OCSF. Please treat this as beta-grade code.
 
 ## Overview
 
 This project provides a tool for generating [JSON Schema](https://json-schema.org/draft/2020-12) files that can
-be used for validating log files that follow the Open Cybersecurity Schema Framework.
+be used for validating instances of events that follow the Open Cybersecurity Schema Framework.
 
 ## Project Goal
 
-The goal of this project is to generate OCSF JSON Schema files locally using Python, eliminating the need to download them from [schema.ocsf.io](https://schema.ocsf.io). Given the vast number of possible variations across OCSF versions, classes, objects, and profiles, this approach provides a more efficient way to validate log files—especially when dealing with diverse inputs. It also reduces reliance on external servers, making validation both faster and more sustainable.
+The goal of this project is to generate OCSF JSON Schema files locally using Python, eliminating the need to download them from [schema.ocsf.io](https://schema.ocsf.io). Given the large number of possible variations across OCSF versions, classes, objects, and profiles, this approach provides a more efficient way to validate events—especially when dealing with diverse inputs. It also reduces reliance on external servers, making validation both faster and more sustainable.
 
 OCSF JSON Schemas are complex, consisting of numerous interrelated classes and objects spanning multiple schema versions. Additionally, the structure must adapt based on the selected OCSF profiles. This tool generates schemas that closely align with those from [schema.ocsf.io](https://schema.ocsf.io) but introduces key differences:
 
@@ -20,8 +20,8 @@ OCSF JSON Schemas are complex, consisting of numerous interrelated classes and o
 
 
 ## OCSF Version
-The following OCSF versions are packaged for convenience in [ocsf_schema/](ocsf_schema/). Please also see 
-the [README](ocsf_schema/README.md) for details on generating the Picket version of the schema files, which 
+The following OCSF versions are packaged for convenience in [ocsf_json_schema/ocsf/](ocsf_json_schema/ocsf/). Please also see 
+the [README](ocsf_json_schema/ocsf/README.md) for details on generating the Picket version of the schema files, which 
 can give a slight performance boost.
 
 - 1.0.0
@@ -38,7 +38,7 @@ You can also [bring your own schema](#bring-your-own-schema) if required or desi
 
 Requires Python 3.10 or above. There are no other dependencies needed for normal use.
 
-To run the tests, install the dev dependencies (`pytest` & `jsonschema`).
+To run the tests, install the dev dependencies (`pytest`, `pytest-cov` & `jsonschema`).
 ```shell
 pip install -e '.[dev]' 
 ```
@@ -175,13 +175,11 @@ print(json.dumps(json_schema, indent=2))
 
 > [!NOTE]
 > The validation process itself is outside the scope of this project, but here's an example of how you _could_ do it.
+> `jsonschema` isn't a dependency of `ocsf-json-schema`, so you'll need to install it yourself if you wish to use it.
 
 The generated JSON Schema files can be used with any JSON validator that supports 2020-12. Python's `jsonschema`, for example.
 
-> [!WARNING]
-> `jsonschema` isn't a dependency of `ocsf-json-schema`, so you'll need to install it yourself if you wish to use it.
-
-Assuming you have a OCSF log file in `authentication.log.json`:
+Assuming you have an instance of a OCSF event in the file `authentication.log.json`:
 ```python
 import json
 from jsonschema import validate, exceptions

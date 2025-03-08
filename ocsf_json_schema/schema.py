@@ -266,15 +266,29 @@ class OcsfJsonSchema:
         # ---
 
         if 'max_len' in type_definition:
-            type_format["maximum"] = type_definition['max_len']
-            if 'range' in type_definition:
-                raise RuntimeError("max_len or range should be set, not both")
+            if json_type != 'string':
+                raise ValueError(f"max_len is only valid for string types, not {type_name}/{json_type}")
+            type_format["maxLength"] = type_definition['max_len']
+
 
         if 'range' in type_definition:
-            type_format["minimum"] = type_definition['range'][0]
-            type_format["maximum"] = type_definition['range'][1]
+            if json_type not in {'integer', 'number'}:
+                raise ValueError(f"range is only valid for integer or number types, not {type_name}/{json_type}")
+
+            type_range = type_definition['range']
+            if len(type_range) != 2:
+                raise ValueError(f"range must have exactly two values, not {type_range}")
+
+            if type_range[0] > type_range[1]:
+                raise ValueError(f"the first value must be less than or equal to the second value, not {type_range}")
+
+            type_format["minimum"] = type_range[0]
+            type_format["maximum"] = type_range[1]
+
 
         if 'regex' in type_definition:
+            if json_type != 'string':
+                raise ValueError(f"regex is only valid for string types, not {type_name}/{json_type}")
             type_format['pattern'] = type_definition['regex']
 
             """

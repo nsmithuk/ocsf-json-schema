@@ -187,7 +187,7 @@ def test_generate_type_constraints_all_variations(ocsf_schema):
 
     max_len_constraints = {"max_len": 100}
     result = ocsf_schema._generate_type_constraints("string_t", "string", {"type": "string_t", **max_len_constraints}, None)
-    assert result["maximum"] == 100
+    assert result["maxLength"] == 100
 
     range_constraints = {"range": [0, 255]}
     result = ocsf_schema._generate_type_constraints("integer_t", "integer", {"type": "integer_t", **range_constraints}, None)
@@ -198,8 +198,11 @@ def test_generate_type_constraints_all_variations(ocsf_schema):
     result = ocsf_schema._generate_type_constraints("string_t", "string", {"type": "string_t", **regex_constraints}, None)
     assert result["pattern"] == "^test$"
 
-    with pytest.raises(RuntimeError, match="max_len or range should be set, not both"):
-        ocsf_schema._generate_type_constraints("string_t", "string", {"type": "string_t", "max_len": 100, "range": [0, 255]}, None)
+    with pytest.raises(ValueError, match="range is only valid for integer or number types, not string_t/string"):
+        ocsf_schema._generate_type_constraints("string_t", "string", {"type": "string_t", "range": [0, 255]}, None)
+
+    with pytest.raises(ValueError, match="max_len is only valid for string types, not integer_t/integer"):
+        ocsf_schema._generate_type_constraints("integer_t", "integer", {"type": "integer_t", "max_len": 7}, None)
 
     # Test ip_t with version-specific override for 1.0.0
     result = ocsf_schema._generate_type_constraints("ip_t", "string", {"type": "string_t", "regex": ".*"}, None)
