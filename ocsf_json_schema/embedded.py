@@ -39,15 +39,20 @@ class OcsfJsonSchemaEmbedded:
         # Rewrite property references and track seen objects
         data["properties"], objects_seen = self._rewrite_references(data["properties"])
 
-        if not objects_seen:  # Skip if no objects to embed
+        if not objects_seen:
+            # Skip the rest if no objects to embed
             return data
 
         # Extract profiles from the schema's $id URI
         profiles = self._profiles_from_uri(data['$id'])
-        data['$defs'] = {}  # Initialize definitions section
+        data['$defs'] = {}
+
+        # We keep track of what objects i've already added.
         objects_added = set()
+
         loop_count = 0
 
+        # The objects to add are those seen, minus those we already have.
         objects_to_add = objects_seen.difference(objects_added)
 
         # Process all referenced objects, including nested ones
@@ -72,12 +77,14 @@ class OcsfJsonSchemaEmbedded:
                 objects_seen.update(new_objects)
                 objects_added.add(obj_name)
 
+            # The objects to add are those seen, minus those we already have.
             objects_to_add = objects_seen.difference(objects_added)
             loop_count = loop_count + 1
 
         return data
 
-    def _rewrite_references(self, properties: dict) -> tuple[dict, set]:
+    @staticmethod
+    def _rewrite_references(properties: dict) -> tuple[dict, set]:
         """Rewrite $ref URIs to local $defs paths and collect referenced object names."""
         objects_seen = set()
         for attr_data in properties.values():
