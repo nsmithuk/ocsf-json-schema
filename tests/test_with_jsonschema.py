@@ -6,7 +6,7 @@ from ocsf_json_schema.embedded import OcsfJsonSchemaEmbedded
 from jsonschema import Draft202012Validator, exceptions
 
 
-# The differance between these two tests is one uses `OcsfJsonSchema`, and the other `OcsfJsonSchemaEmbedded`.
+# The difference between these two tests is one uses `OcsfJsonSchema`, and the other `OcsfJsonSchemaEmbedded`.
 
 @pytest.mark.parametrize("version", [
     "1.0.0-rc.2",
@@ -16,6 +16,7 @@ from jsonschema import Draft202012Validator, exceptions
     "1.2.0",
     "1.3.0",
     "1.4.0"
+    "1.5.0"
 ])
 def test_object_name_from_uri(version):
     data = get_ocsf_schema(version)
@@ -63,6 +64,7 @@ def test_object_name_from_uri(version):
     "1.2.0",
     "1.3.0",
     "1.4.0"
+    "1.5.0"
 ])
 def test_object_name_from_uri_embedded(version):
     data = get_ocsf_schema(version)
