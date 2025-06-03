@@ -1,33 +1,98 @@
-name: Run Tests
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Python package
 
 on:
   push:
-    branches: [ '*' ]
+    branches: [ "*" ]
+    tags: ["v*.*.*"]
   pull_request:
-    branches:
-      - main
+    branches: [ "main" ]
 
 jobs:
   test:
-    name: Run Pytest on Python ${{ matrix.python-version }}
+
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
 
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+    outputs:
+      file_version: ${{ steps.get_version.outputs.version }}
 
-      - name: Set Up Python
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install hatch
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install hatch
+
+    - name: Setup hatch env
+      run: |
+        hatch --verbose env create dev
+
+    - name: Test with pytest
+      run: |
+        hatch --env dev run pytest
+
+    - name: Extract version from __about__.py
+      id: get_version
+      run: |
+        VERSION=$(hatch --env dev run python -c "from ocsf_json_schema.__about__ import __version__; print(__version__)")
+        echo "__about__.py version: $VERSION"
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"        
+    
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check that tag version matches __about__.py
+        run: |
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          FILE_VERSION="${{ needs.test.outputs.file_version }}"
+
+          echo "Git tag version: $TAG_VERSION"
+          echo "__about__.py version: $FILE_VERSION"
+
+          if [ "$TAG_VERSION" != "$FILE_VERSION" ]; then
+            echo "❌ Tag version ($TAG_VERSION) does not match __about__.py version ($FILE_VERSION)"
+            exit 1
+          fi
+
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.13"
 
-      - name: Install Dependencies
+      - name: Install hatch
         run: |
           python -m pip install --upgrade pip
-          pip install -e .[dev]  # Installs dev dependencies from pyproject.toml
+          python -m pip install hatch
 
-      - name: Run Tests
-        run: pytest
+      - name: Build package
+        run: |
+          hatch build
+          
+          #List out what's in the package
+          tar -tzf dist/*.tar.gz
+          unzip -l dist/*.whl
+
+      - name: Publish to PyPI
+        env:
+          HATCH_INDEX_USER: __token__
+          HATCH_INDEX_AUTH: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          hatch publish
