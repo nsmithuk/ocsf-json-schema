@@ -12,14 +12,14 @@ on:
 
 jobs:
   test:
-
-    runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        os: ["ubuntu-latest", "windows-latest", "macos-latest", "ubuntu-24.04-arm"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+    runs-on: ${{ matrix.os }}
 
     outputs:
+      coverage: ${{ steps.get_coverage.outputs.coverage }}
       file_version: ${{ steps.get_version.outputs.version }}
 
     steps:
@@ -41,15 +41,23 @@ jobs:
 
     - name: Test with pytest
       run: |
-        hatch --env dev run pytest
+        hatch --env dev run pytest --cov --cov-report=term --cov-report=json -vv
+
+    - name: Extract coverage
+      id: get_coverage
+      if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.14' }}
+      run: |
+        COVERAGE=$(jq -r '.totals.percent_covered | floor' coverage.json)
+        echo "Coverage is: ${COVERAGE}%"
+        echo "coverage=$COVERAGE" >> "$GITHUB_OUTPUT"
 
     - name: Extract version from __about__.py
       id: get_version
+      if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.14' }}
       run: |
         VERSION=$(hatch --env dev run python -c "from ocsf_json_schema.__about__ import __version__; print(__version__)")
         echo "__about__.py version: $VERSION"
-        echo "version=$VERSION" >> "$GITHUB_OUTPUT"        
-    
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
   publish:
     if: startsWith(github.ref, 'refs/tags/v')
@@ -75,7 +83,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.14"
 
       - name: Install hatch
         run: |
@@ -91,8 +99,22 @@ jobs:
           unzip -l dist/*.whl
 
       - name: Publish to PyPI
+        # Prevent forks from blindly trying this.
+        if: ${{ github.repository == 'nsmithuk/ocsf-json-schema' }}
         env:
           HATCH_INDEX_USER: __token__
           HATCH_INDEX_AUTH: ${{ secrets.PYPI_API_TOKEN }}
         run: |
           hatch publish
+
+      - name: Create coverage badge
+        # Prevent forks from blindly trying this.
+        if: ${{ github.repository == 'nsmithuk/ocsf-json-schema' }}
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: 824252bf9b4b86bcfc3957470772da20
+          filename: ocsf-json-schema.json
+          label: Coverage
+          message: "${{ needs.test.outputs.coverage }}%"
+          color: green

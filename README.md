@@ -1,8 +1,5 @@
 # OCSF JSON Schema
 
-> [!NOTE]
-> This is a work in progress—primarily for my own learning about OCSF. Please treat this as beta-grade code.
-
 ## Overview
 
 This project provides a tool for generating [JSON Schema](https://json-schema.org/draft/2020-12) files that can
@@ -18,7 +15,6 @@ OCSF JSON Schemas are complex, consisting of numerous interrelated classes and o
 - **Extended Features**: We add support for the `deprecated` flag, as well as the `at_least_one` and `just_one` constraints.  
 - **Absolute `$id` References**: Classes and objects are assigned absolute `$id` values corresponding to their canonical URIs on `schema.ocsf.io`, ensuring consistency.  
 
-
 ## OCSF Version
 The following OCSF versions are packaged for convenience in [ocsf_json_schema/ocsf/](ocsf_json_schema/ocsf/). Please also see 
 the [README](ocsf_json_schema/ocsf/README.md) for details on generating the Picket version of the schema files, which 
@@ -32,6 +28,8 @@ can give a slight performance boost.
 - 1.3.0
 - 1.4.0
 - 1.5.0
+- 1.6.0
+- 1.7.0
 
 You can also [bring your own schema](#bring-your-own-schema) if required or desired.
 
@@ -146,14 +144,14 @@ being your own schema.
 
 For example, download the dev schema:
 ```shell
-curl -o 1.6.0-dev.json https://schema.ocsf.io/1.6.0-dev/export/schema
+curl -o 1.8.0-dev.json https://schema.ocsf.io/1.8.0-dev/export/schema
 ```
 Then
 ```python
 import json
 from ocsf_json_schema import get_ocsf_schema, OcsfJsonSchemaEmbedded
 
-with open("1.6.0-dev.json", 'r') as file:
+with open("1.8.0-dev.json", 'r') as file:
     schema_from_file = json.load(file)
 
 # Loads the version of the OCSF Schema from the above file.

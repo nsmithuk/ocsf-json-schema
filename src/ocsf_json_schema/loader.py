@@ -5,7 +5,7 @@ from pathlib import Path
 
 def load_ocsf_schema_json(path: str) -> dict:
     """Load OCSF schema from a JSON file."""
-    with open(path, 'r') as file:
+    with open(path, "r", encoding="utf-8") as file:
         return json.load(file)
 
 

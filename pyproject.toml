@@ -44,17 +44,26 @@ exclude = [
 [tool.hatch.build.targets.wheel]
 packages = ["src/ocsf_json_schema"]
 
+
 [tool.coverage.run]
-source_pkgs = ["ocsf_json_schema", "tests"]
 branch = true
 parallel = true
+source_pkgs = ["ocsf_json_schema"]
 omit = [
   "src/ocsf_json_schema/__about__.py",
+  "src/ocsf_json_schema/loader.py",
+  "src/ocsf_json_schema/pickle_it.py",
 ]
 
 [tool.coverage.paths]
-ocsf_json_schema = ["src/ocsf_json_schema", "*/ocsf-json-schema/src/ocsf_json_schema"]
-tests = ["tests", "*/ocsf-json-schema/tests"]
+ocsf_json_schema = [
+  "src/ocsf_json_schema",
+  "*/ocsf-json-schema/src/ocsf_json_schema",
+]
+tests = [
+  "tests",
+  "*/ocsf-json-schema/tests",
+]
 
 [tool.coverage.report]
 exclude_lines = [
