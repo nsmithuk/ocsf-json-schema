@@ -1,3 +1,7 @@
+![Tests](https://github.com/nsmithuk/ocsf-json-schema/actions/workflows/main.yml/badge.svg?branch=main)
+![Coverage Badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/nsmithuk/824252bf9b4b86bcfc3957470772da20/raw/ocsf-json-schema.json)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/ocsf-json-schema?period=total&units=INTERNATIONAL_SYSTEM&left_color=GRAY&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/ocsf-json-schema)
+
 # OCSF JSON Schema
 
 ## Overview
