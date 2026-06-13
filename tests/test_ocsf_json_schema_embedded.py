@@ -39,3 +39,10 @@ def test_class_merges_with_objects(embedded_schema):
     assert "id" in result["$defs"]["user"]["properties"]
     # Check the reference is rewritten
     assert result["properties"]["user"]["$ref"] == "#/$defs/user"
+
+def test_defs_strip_root_only_keywords(embedded_schema):
+    # $id and $schema are only valid at document root; must not appear inside $defs
+    result = embedded_schema.get_class_schema("authentication")
+    for def_name, def_schema in result["$defs"].items():
+        assert "$id" not in def_schema, f"$defs/{def_name} must not contain $id"
+        assert "$schema" not in def_schema, f"$defs/{def_name} must not contain $schema"
