@@ -65,8 +65,9 @@ class OcsfJsonSchemaEmbedded:
             for obj_name in objects_to_add:
                 obj = self.schema.get_object_schema(obj_name, profiles)
 
-                # Objects should not include their own ID, as we need $refs to be relative to the class schema.
+                # $id and $schema are only valid at document root, not inside $defs.
                 del obj["$id"]
+                del obj["$schema"]
 
                 # Rewrite the ref so it's local.
                 obj["properties"], new_objects = self._rewrite_references(obj["properties"])
