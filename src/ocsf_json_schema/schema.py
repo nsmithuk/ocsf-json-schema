@@ -15,6 +15,13 @@ class OcsfJsonSchema:
         self.schema = json_schema
         self.version = json_schema.get("version")
         self.class_name_uid_map: dict[int, str] = {}
+        self._is_v2 = 'dictionary' in json_schema
+
+    @property
+    def _types(self) -> dict:
+        if self._is_v2:
+            return self.schema['dictionary']['types']['attributes']
+        return self.schema['types']
 
     def lookup_class_name_from_uid(self, class_uid: int) -> str:
         if len(self.class_name_uid_map) == 0:
@@ -145,9 +152,17 @@ class OcsfJsonSchema:
         for attr_name, attr_data in attributes.items():
 
             # If an attribute is part of a profile, only include it if that profile is selected.
-            # Oddly some attributes have a profile value set to null. We should always include those.
-            if 'profile' in attr_data and attr_data['profile'] is not None and attr_data['profile'] not in profiles:
-                continue
+            if self._is_v2:
+                # v2: profiles is a list; empty list means no restriction
+                attr_profiles = attr_data.get('profiles') or []
+                has_profile_restriction = len(attr_profiles) > 0
+                matches_a_selected_profile = any(p in profiles for p in attr_profiles)
+                if has_profile_restriction and not matches_a_selected_profile:
+                    continue
+            else:
+                # v1: profile is a singular string or null; null means no restriction
+                if 'profile' in attr_data and attr_data['profile'] is not None and attr_data['profile'] not in profiles:
+                    continue
 
             properties[attr_name] = self._generate_attribute(attr_data, ref_format)
             if attr_data.get("requirement") == "required":
@@ -195,10 +210,10 @@ class OcsfJsonSchema:
             item["$ref"] = ref_format % obj_type
 
         else:
-            if attr_type not in self.schema['types']:
+            if attr_type not in self._types:
                 raise ValueError(f"unknown type found: {attr_type}")
 
-            type_definition = self.schema['types'][attr_type]
+            type_definition = self._types[attr_type]
 
             # If it's a base type
             if attr_type in base_types:

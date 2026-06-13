@@ -24,6 +24,7 @@ curl -o 1.4.0.json https://schema.ocsf.io/1.4.0/export/schema
 curl -o 1.5.0.json https://schema.ocsf.io/1.5.0/export/schema
 curl -o 1.6.0.json https://schema.ocsf.io/1.6.0/export/schema
 curl -o 1.7.0.json https://schema.ocsf.io/1.7.0/export/schema
+curl -o 1.8.0.json https://schema.ocsf.io/1.8.0/export/v2/schema
 ```
 
 ## Pickle Files
