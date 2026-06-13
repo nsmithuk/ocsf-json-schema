@@ -114,6 +114,14 @@ def test_extract_attributes(ocsf_schema):
     assert "field1" in properties
     assert "field3" in properties
 
+def test_profile_deduplication(ocsf_schema):
+    # Case variants of the same profile must not produce duplicate entries in the $id URI
+    result = ocsf_schema.get_class_schema("authentication", ["PROFILE", "profile"])
+    assert result["$id"] == "https://schema.ocsf.io/schema/1.0.0/classes/authentication?profiles=profile"
+
+    result = ocsf_schema.get_class_schema("authentication", ["B", "A", "b"])
+    assert result["$id"] == "https://schema.ocsf.io/schema/1.0.0/classes/authentication?profiles=a,b"
+
 def test_generate_attribute_all_types(ocsf_schema):
     ref_format = "ref_format/%s"
     base_type_tests = [
@@ -203,6 +211,15 @@ def test_generate_type_constraints_all_variations(ocsf_schema):
 
     with pytest.raises(ValueError, match="max_len is only valid for string types, not integer_t/integer"):
         ocsf_schema._generate_type_constraints("integer_t", "integer", {"type": "integer_t", "max_len": 7}, None)
+
+    # json_t is a list type — constraints must not raise
+    json_t_type = ['object', 'string', 'integer', 'number', 'boolean', 'array', 'null']
+    result = ocsf_schema._generate_type_constraints("json_t", json_t_type, {"max_len": 100}, None)
+    assert result == {}
+    result = ocsf_schema._generate_type_constraints("json_t", json_t_type, {"range": [0, 255]}, None)
+    assert result == {}
+    result = ocsf_schema._generate_type_constraints("json_t", json_t_type, {"regex": "^test$"}, None)
+    assert result == {}
 
     # Test ip_t with version-specific override for 1.0.0
     result = ocsf_schema._generate_type_constraints("ip_t", "string", {"type": "string_t", "regex": ".*"}, None)

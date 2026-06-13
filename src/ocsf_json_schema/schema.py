@@ -101,10 +101,7 @@ class OcsfJsonSchema:
         # Prepare profile query string
         profile_query_str = ""
         if len(profiles) > 0:
-            # Ensure list only contains unique items.
-            profiles = list(set(profiles))
-            # Set to lowercase, and sorted alphabetically.
-            profiles = sorted(s.lower() for s in profiles)
+            profiles = sorted(set(s.lower() for s in profiles))
             profile_query_str = f"?profiles={','.join(profiles)}"
 
         # Format for object references
@@ -259,6 +256,9 @@ class OcsfJsonSchema:
         """
 
         type_format = {}
+
+        if isinstance(json_type, list):
+            return type_format
 
         if enum:
             values = list(enum.keys())
