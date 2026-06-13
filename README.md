@@ -21,7 +21,7 @@ OCSF JSON Schemas are complex, consisting of numerous interrelated classes and o
 
 ## OCSF Version
 The following OCSF versions are packaged for convenience in [ocsf_json_schema/ocsf/](ocsf_json_schema/ocsf/). Please also see 
-the [README](ocsf_json_schema/ocsf/README.md) for details on generating the Picket version of the schema files, which 
+the [README](src/ocsf_json_schema/ocsf/README.md) for details on generating the Pickle version of the schema files, which 
 can give a slight performance boost.
 
 - 1.0.0
@@ -38,18 +38,12 @@ can give a slight performance boost.
 
 You can also [bring your own schema](#bring-your-own-schema) if required or desired.
 
-## Setup
+## Installation
 
-Requires Python 3.10 or above. There are no other dependencies needed for normal use.
+Requires Python 3.10 or above. There are no runtime dependencies.
 
-To run the tests, install the dev dependencies (`pytest`, `pytest-cov` & `jsonschema`).
 ```shell
-pip install -e '.[dev]' 
-```
-
-Tests can be run with
-```shell
-pytest
+pip install ocsf-json-schema
 ```
 
 ## Usage
@@ -213,6 +207,18 @@ except exceptions.SchemaError as e:
 
 - `null` values are not supported and, if present, will likely result in the validation failing. If a value is `null`, the key/value pair should be removed before validation. This aligns with the JSON Schema files from [schema.ocsf.io](https://schema.ocsf.io).
 - If you are validating a file that was previously parquet, be careful of fields that should be a dictionary, but may have been converted to a list of tuples. The validator will expect these fields to be a dictionary. This will most likely occur for fields of type `object`. For example, `unmapped`.
+
+## Development
+
+Install the dev dependencies (`pytest`, `pytest-cov` & `jsonschema`) with:
+```shell
+pip install -e '.[dev]'
+```
+
+Tests can be run with:
+```shell
+pytest
+```
 
 ## Build
 
