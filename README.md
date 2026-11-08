@@ -35,6 +35,7 @@ can give a slight performance boost.
 - 1.6.0
 - 1.7.0
 - 1.8.0
+- 1.9.0
 
 You can also [bring your own schema](#bring-your-own-schema) if required or desired.
 
@@ -143,14 +144,14 @@ being your own schema.
 
 For example, download the dev schema:
 ```shell
-curl -o 1.8.0-dev.json https://schema.ocsf.io/1.8.0-dev/export/schema
+curl -o 1.10.0-dev.json https://schema.ocsf.io/1.10.0-dev/export/v2/schema
 ```
 Then
 ```python
 import json
 from ocsf_json_schema import get_ocsf_schema, OcsfJsonSchemaEmbedded
 
-with open("1.9.0-dev.json", 'r') as file:
+with open("1.10.0-dev.json", 'r') as file:
     schema_from_file = json.load(file)
 
 # Loads the version of the OCSF Schema from the above file.
