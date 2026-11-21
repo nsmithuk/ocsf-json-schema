@@ -21,6 +21,7 @@ from jsonschema import Draft202012Validator, exceptions
     "1.7.0",
     "1.8.0",
     "1.9.0",
+    "1.10.0",
 ])
 def test_object_name_from_uri(version):
     data = get_ocsf_schema(version)
@@ -73,6 +74,7 @@ def test_object_name_from_uri(version):
     "1.7.0",
     "1.8.0",
     "1.9.0",
+    "1.10.0",
 ])
 def test_object_name_from_uri_embedded(version):
     data = get_ocsf_schema(version)
